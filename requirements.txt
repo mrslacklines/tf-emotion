@@ -1,0 +1,8 @@
+keras==2.2.0
+mxnet
+h5py
+unittest2
+imutils
+keras-resnet
+keras-vggface
+autokeras
