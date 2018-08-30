@@ -65,14 +65,18 @@ for imagePath in imagePaths:
     # extract chip and append face to dataset instead of full image
     # preprocessed -> emotion -> chip
     image = cv2.imread(imagePath, cv2.IMREAD_COLOR)
-    image = cv2.resize(image, (IMAGE_DIMS[1], IMAGE_DIMS[0]))
-    image = img_to_array(image) / 255.0
-    data.append(image)
-    print len(data)
-    # extract set of class labels from the image path and update the
-    # labels list
-    print label
-    labels.append(label)
+    bounding_boxes, points, chips = fr.find_faces(image, return_chips=True, return_binary=True)
+    if chips is None:
+        continue
+    for chip in chips:
+        chip = cv2.resize(chip, (IMAGE_DIMS[1], IMAGE_DIMS[0]))
+        chip = img_to_array(chip) / 255.0
+        data.append(chip)
+        labels.append(label)
+        print len(data)
+        # extract set of class labels from the image path and update the
+        # labels list
+        print label
 # scale the raw pixel intensities to the range [0, 1]
 data = np.array(data, dtype="float")
 labels = np.array(labels)
