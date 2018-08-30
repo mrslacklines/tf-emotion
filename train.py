@@ -54,10 +54,13 @@ random.shuffle(imagePaths)
 # initialize the data and labels
 data = []
 labels = []
-
+errors = 0
+files_processed = 0
 
 # loop over the input images
 for imagePath in imagePaths:
+    files_processed = files_processed + 1
+    print("Processed: {}".format(files_processed))
     label = imagePath.split(os.path.sep)[-2].split("_")
     # load the image, pre-process it, and store it in the data list
     if label[0] in ['checkpoints', '.ipynb']:
@@ -65,18 +68,35 @@ for imagePath in imagePaths:
     # extract chip and append face to dataset instead of full image
     # preprocessed -> emotion -> chip
     image = cv2.imread(imagePath, cv2.IMREAD_COLOR)
-    bounding_boxes, points, chips = fr.find_faces(image, return_chips=True, return_binary=True)
+    try:
+        bounding_boxes, points, chips = fr.find_faces(
+            image, return_chips=True, return_binary=True)
+    except ValueError as exc:
+        print(exc)
+        errors = errors + 1
+        print('Errors: {}'.format(errors))
+        continue
     if chips is None:
         continue
+    chip_no = 0
     for chip in chips:
+        chip_no = chip_no + 1
         chip = cv2.resize(chip, (IMAGE_DIMS[1], IMAGE_DIMS[0]))
-        chip = img_to_array(chip) / 255.0
-        data.append(chip)
-        labels.append(label)
-        print len(data)
+        # chip = img_to_array(chip) / 255.0
+        path = \
+            os.getcwd() + '/processed/emotion/' + \
+            '/'.join(imagePath.split('/')[4:-1]) + '/'
+        filename = '{}_{}.jpg'.format(imagePath.split('/')[-1], chip_no)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        cv2.imwrite(path + filename, chip)
+        print('Saved: {}{}'.format(path, filename))
+        # data.append(chip)
+        # labels.append(label)
+        # print len(data)
         # extract set of class labels from the image path and update the
         # labels list
-        print label
+        # print label
 # scale the raw pixel intensities to the range [0, 1]
 data = np.array(data, dtype="float")
 labels = np.array(labels)
